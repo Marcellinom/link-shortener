@@ -46,7 +46,7 @@
             $('#submit-btn').click(async () => {
                 if (isEmpty($('#url').val(), 'url harus diisi!')) return
                 $('#submit-btn').prop('disabled', true)
-                let id = $('#identifier').val() === '' ? await generateId() : $('#identifier').val()
+                let id = $('#identifier').val() === '' ? await generateId() : await checkCustomId($('#identifier').val())
 
                 await firebase.database().ref(id).set($('#url').val())
 
@@ -67,6 +67,13 @@
                 location.reload()
             });
         })
+        async function checkCustomId(id) {
+            if ((await firebase.database().ref().child(id).once('value')).node_.value_ !== undefined) {
+                alert('custom id already taken')
+                location.reload()
+            }
+            return id
+        }
         function isEmpty(text, warning) {
             if (text == '') {
                 $('#result').html(warning)
