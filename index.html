@@ -35,6 +35,10 @@
             console.log(link)
             if (link !== undefined)
                 $('head').append(`<meta http-equiv="refresh" content="0; url=${link}" />`)
+            else {
+                document.getElementsByTagName("html")[0].style.visibility = "visible";
+                return
+            }
         })
     </script>
     <script>
@@ -43,10 +47,9 @@
                 if (isEmpty($('#url').val(), 'url harus diisi!')) return
                 $('#submit-btn').prop('disabled', true)
                 let id = $('#identifier').val() === '' ? await generateId() : $('#identifier').val()
-                let obj = {}
-                console.log(id)
-                obj[id] = $('#url').val()
-                await firebase.database().ref().set(obj)
+
+                await firebase.database().ref(id).set($('#url').val())
+
                 $('#result').html(`${document.URL}?${id}`)
                 document.getElementById('result').href = `${document.URL}?${id}`
             })
