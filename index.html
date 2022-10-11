@@ -10,20 +10,120 @@
     <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-analytics.js"></script>
     <title>Pendek.in | Link Shortener Terbaik</title>
     <script>
-        var currentURL = (document.URL);
-        var part = currentURL.split("?")[1];
-        console.log(part, process.env.API_KEY)
+    var firebaseConfig = {
+        apiKey: "AIzaSyBW3eNdDOur0AaOIb2t5pFelKoEGjgWOJ4",
+        authDomain: "linksafe-69.firebaseapp.com",
+        databaseURL: "https://linksafe-69.firebaseio.com",
+        projectId: "linksafe-69",
+        storageBucket: "linksafe-69.appspot.com",
+        messagingSenderId: "945067236274",
+        appId: "1:945067236274:web:fb5a4dbfd0e18043e3e2ab",
+        measurementId: "G-ZCWM2H6108"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+    </script>
+    <script>
+        $(document).ready(async () => {
+            var currentURL = (document.URL);
+            var id = currentURL.split("?")[1];
+            if (id == undefined) {
+                document.getElementsByTagName("html")[0].style.visibility = "visible";
+                return
+            }
+            let link = (await firebase.database().ref().child(id).once('value')).node_.value_
+            console.log(link)
+            if (link !== undefined)
+                $('head').append(`<meta http-equiv="refresh" content="0; url=${link}" />`)
+        })
+    </script>
+    <script>
+        $(document).ready(() => {
+            $('#submit-btn').click(async () => {
+                if (isEmpty($('#url').val(), 'url harus diisi!')) return
+                $('#submit-btn').prop('disabled', true)
+                let id = $('#identifier').val() === '' ? await generateId() : $('#identifier').val()
+                let obj = {}
+                console.log(id)
+                obj[id] = $('#url').val()
+                await firebase.database().ref().set(obj)
+                $('#result').html(`${document.URL}?${id}`)
+                document.getElementById('result').href = `${document.URL}?${id}`
+            })
+            $('.copy_text').click(function (e) {
+                e.preventDefault();
+                var copyText = $(this).attr('href');
+
+                document.addEventListener('copy', function(e) {
+                    e.clipboardData.setData('text/plain', copyText);
+                    e.preventDefault();
+                }, true);
+
+                document.execCommand('copy');
+                alert('Link Copied!'); 
+                location.reload()
+            });
+        })
+        function isEmpty(text, warning) {
+            if (text == '') {
+                $('#result').html(warning)
+                return true
+            }
+            return false
+        }
+        async function generateId() {
+            let id = makeid(6)
+            while((await firebase.database().ref().child(id).once('value')).node_.value_ !== undefined) id = makeid(6)
+            return id
+        }
+        function getAscii() {
+            return Math.random() < 0.5 ? Math.random() * (90 - 65) + 65 : Math.random() * (122 - 97) + 97
+        }
+        function makeid(length) {
+            var result = '', i = 0
+            while (i++ < length) result += String.fromCharCode(getAscii())
+            return result
+        }
     </script>
     <style>
+        html { visibility:hidden; }
         body {
             background-color: rgb(31, 31, 31);
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+        }
+        .col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        #url {
+            font-size: 25px;
+            height: 3rem;
+            width: 25.3rem;
+            max-width: 90vw;
+        }
+        #result {
+            font-family:Arial, Helvetica, sans-serif;
+            color: white;
+        }
+        #submit-btn {
+            height: 54px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <input id="url" type="text" placeholder="url">
-        <button id="submit-btn">Submit</button>
+        <div class="col">
+            <input id="url" type="text" autocomplete="off" placeholder="url" required>
+            <input id="identifier" type="text" placeholder="identifier (optional)">
+            <a class="copy_text" id="result" data-toggle="tooltip"></a>
+        </div>
+        <div class="col">
+            <button id="submit-btn">Submit</button>
+        </div>
     </div>
 </body>
 </html>
